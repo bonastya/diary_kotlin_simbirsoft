@@ -1,14 +1,13 @@
 package com.example.diary_kotlin_simbirsoft
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.AlarmClock.EXTRA_MESSAGE
 import android.provider.CalendarContract
 import android.util.DisplayMetrics
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Space
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
@@ -47,7 +46,7 @@ fun update(){
     var hours:LinearLayout= LinearLayout(this)
     val lph= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
         LinearLayout.LayoutParams.WRAP_CONTENT)
-    lph.setMargins(80, 10, 10, 0)
+    lph.setMargins(20, 3, 10, 0)
     hours.setLayoutParams(lph)
     hours.orientation = LinearLayout.VERTICAL
 
@@ -56,13 +55,13 @@ for(i in 0..24){
     val hour = TextView(this)
     val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
         LinearLayout.LayoutParams.WRAP_CONTENT)
-    lp.setMargins(0, 0, 7, 0)
+    lp.setMargins(0, 0, 0, 0)
 
     hour.setBackgroundColor(Color.CYAN)
 
     hour.setLayoutParams(lp)
 
-    hour.setText(intToTime(i));
+    hour.setText(" "+intToTime(i));
     hour.setTextColor(Color.BLACK)
     hour.getLayoutParams().height = hour_heigh
     hour.getLayoutParams().width = 120
@@ -75,7 +74,7 @@ for(i in 0..24){
     val displayMetrics = DisplayMetrics()
     windowManager.defaultDisplay.getMetrics(displayMetrics)
 
-    var dealWidth = (displayMetrics.widthPixels-300)/deals.size
+    var dealWidth = (displayMetrics.widthPixels-250)/deals.size
 
     for(i in deals){
 
@@ -85,7 +84,7 @@ for(i in 0..24){
         var dealColumn:LinearLayout= LinearLayout(this)
         val lpd= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT)
-        lpd.setMargins(0, 0, 5, 0)
+        lpd.setMargins(0, 3, 5, 0)
         dealColumn.setLayoutParams(lpd)
         dealColumn.orientation = LinearLayout.VERTICAL
 
@@ -206,23 +205,14 @@ for(i in 0..24){
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    fun goToAddDeal(view: android.view.View) {
+        //val editText = findViewById<EditText>(R.id.editTextTextPersonName)
+        val message = "111"
+        val intent = Intent(this, AddDealActivity::class.java).apply {
+            putExtra(EXTRA_MESSAGE, message)
+        }
+        startActivity(intent)
+    }
 
 
 }
