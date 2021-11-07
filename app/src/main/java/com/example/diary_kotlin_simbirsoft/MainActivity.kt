@@ -5,20 +5,12 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.AlarmClock.EXTRA_MESSAGE
-import android.provider.CalendarContract
 import android.util.DisplayMetrics
 import android.widget.*
-import androidx.recyclerview.widget.RecyclerView
 import io.realm.Realm
-import android.R.bool
-import android.annotation.SuppressLint
 import android.icu.util.Calendar
 import android.text.format.DateUtils
-import androidx.core.view.children
-import java.time.Instant
-import java.time.Instant.now
-import java.time.LocalDateTime
-import java.util.*
+import androidx.core.content.ContextCompat
 
 
 var realm: Realm? =null
@@ -27,9 +19,8 @@ var calendarView:CalendarView?=null
 class MainActivity : AppCompatActivity() {
 
     var deals = mutableListOf<Deal>()
-    //private
 
-    var hour_heigh =100.0
+    var hour_heigh =120.0
     var selectedDate = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,10 +82,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
 fun update(){
-    println("aaa lf")
 
     readData()
 
@@ -109,27 +97,24 @@ fun update(){
     hours.setLayoutParams(lph)
     hours.orientation = LinearLayout.VERTICAL
 
-for(i in 0..23){
-    //children of parent linearlayout
-    val hour = TextView(this)
-    val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT)
-    lp.setMargins(0, 0, 0, 0)
+    for(i in 0..23){
+        val hour = TextView(this)
+        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT)
+        lp.setMargins(0, 0, 0, 0)
+        hour.setBackgroundColor(Color.CYAN)
+        hour.setLayoutParams(lp)
 
-    hour.setBackgroundColor(Color.CYAN)
-
-    hour.setLayoutParams(lp)
-
-    hour.setText(" "+intToTime(i));
-    hour.setTextColor(Color.BLACK)
-    hour.getLayoutParams().height = hour_heigh.toInt()
-    hour.getLayoutParams().width = 120
-    hours.addView(hour); // lo agregamos al layout
-}
+        hour.setText(" "+intToTime(i));
+        hour.setTextColor(Color.BLACK)
+        hour.getLayoutParams().height = hour_heigh.toInt()
+        hour.getLayoutParams().width = 120
+        hours.addView(hour)
+    }
     dealsColumns.addView(hours)
 
 
-    ///определить ширину дел
+    //for width of deals
     val displayMetrics = DisplayMetrics()
     windowManager.defaultDisplay.getMetrics(displayMetrics)
 
@@ -157,28 +142,21 @@ for(i in 0..23){
             dealColumn.addView(block)
 
 
-
-
-
-
-
             val deal = TextView(this)
             val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
             lp.setMargins(0, 0, 0, 0)
-
-            deal.setBackgroundColor(Color.CYAN)
-
+            deal.setBackgroundColor(ContextCompat.getColor(this, R.color.teal_lite))
             deal.setLayoutParams(lp)
-
-            deal.setText(i.name);
+            deal.setPadding(15,0,0,0)
+            if(i.description!=="")
+                deal.setText(i.name+"\n--------\n("+i.description+")")
+            else
+                deal.setText(i.name)
             deal.setTextColor(Color.BLACK)
             deal.getLayoutParams().height = (hour_heigh /60 *(i.time_finish - i.time_start)).toInt()
             deal.getLayoutParams().width = dealWidth
             dealColumn.addView(deal);
-
-
-
 
 
             var block2:Space = Space(this)
@@ -190,29 +168,21 @@ for(i in 0..23){
 
             dealColumn.addView(block2)
 
-
             dealsColumns.addView(dealColumn)
 
         }
     }
 
 
-
-
-
 }
 
     fun goToAddDeal(view: android.view.View) {
-        //val editText = findViewById<EditText>(R.id.editTextTextPersonName)
+
         val message = "111"
         val intent = Intent(this, AddDealActivity::class.java).apply {
             putExtra(EXTRA_MESSAGE, message)
         }
         startActivity(intent)
-    }
-
-    fun upd(view: android.view.View) {
-        update()
     }
 
 

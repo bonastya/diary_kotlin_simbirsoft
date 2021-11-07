@@ -2,27 +2,15 @@ package com.example.diary_kotlin_simbirsoft
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.DatePicker
-
 import android.app.DatePickerDialog
 import android.app.DatePickerDialog.OnDateSetListener
-
-import android.widget.TimePicker
-
 import android.app.TimePickerDialog
 import android.app.TimePickerDialog.OnTimeSetListener
 import android.icu.util.Calendar
-import android.os.Build
-
 import android.text.format.DateUtils
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import androidx.annotation.RequiresApi
-import io.realm.Realm
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
 
 class AddDealActivity : AppCompatActivity() {
 
@@ -31,27 +19,25 @@ class AddDealActivity : AppCompatActivity() {
     var editTextDate: TextView? = null
     var editTextTime: TextView? = null
     var editTextTime2: TextView? = null
+    var textViewError1: TextView? = null
+    var textViewError2: TextView? = null
     var dateAndTimeStart: Calendar = Calendar.getInstance()
     var dateAndTimeFinish: Calendar = Calendar.getInstance()
     var deal:Deal=Deal()
 
-    //private var realm: Realm? =null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_deal)
-        //realm= Realm.getDefaultInstance()
-
         editTextName = findViewById(R.id.editTextName);
         editTextDescription = findViewById(R.id.editTextDescription);
         editTextDate = findViewById(R.id.editTextDate);
         editTextTime = findViewById(R.id.editTextTime);
-        editTextTime2 = findViewById(R.id.editTextTime2);
+        editTextTime2 = findViewById(R.id.editTextTime2)
+        textViewError1 = findViewById(R.id.textViewError1)
+        textViewError2 = findViewById(R.id.textViewError2)
         setInitialDate();
         setInitialTimeStart();
         setInitialTimeEnd();
-
-
 
     }
 
@@ -70,20 +56,32 @@ class AddDealActivity : AppCompatActivity() {
 
         deal.id = java.util.UUID.randomUUID().toString()
         println("вот это хочу записать "+deal.name+deal.date+" "+deal.id)
-        try {
-            realm!!.beginTransaction()
-            realm!!.copyToRealmOrUpdate(deal)
-            realm!!.commitTransaction()
-            //realm!!.close()
-        } catch (e: Exception) {
-            println(e)
+        if(deal.time_start>=deal.time_finish || deal.name==""){
+            if(deal.time_start>=deal.time_finish)
+                textViewError2?.setVisibility(View.VISIBLE)
+            else
+                textViewError2?.setVisibility(View.INVISIBLE)
+            if(deal.name=="")
+                textViewError1?.setVisibility(View.VISIBLE)
+            else
+                textViewError1?.setVisibility(View.INVISIBLE)
         }
-        //realm!!.executeTransaction { realm -> realm.copyToRealm(deal) }
+        else{
+            try {
+                realm!!.beginTransaction()
+                realm!!.copyToRealmOrUpdate(deal)
+                realm!!.commitTransaction()
+                //realm!!.close()
+            } catch (e: Exception) {
+                println(e)
+            }
+            finish()
+        }
 
-        finish()
     }
 
 
+    // Dialogs for date and time
     fun setDate(v: View?) {
         DatePickerDialog(
             this@AddDealActivity, d,
@@ -94,7 +92,6 @@ class AddDealActivity : AppCompatActivity() {
             .show()
     }
 
-    // отображаем диалоговое окно для выбора времени
     fun setTimeStart(v: View?) {
         TimePickerDialog(
             this@AddDealActivity, t1,
@@ -113,7 +110,7 @@ class AddDealActivity : AppCompatActivity() {
             .show()
     }
 
-    // установка начальных даты и времени
+    // Set initial date and time(current)
     private fun setInitialDate() {
         editTextDate?.setText(
             DateUtils.formatDateTime(
@@ -145,7 +142,7 @@ class AddDealActivity : AppCompatActivity() {
         )
     }
 
-    // установка обработчика выбора времени
+    // Listeners
     var t1 =
         OnTimeSetListener { view, hourOfDay, minute ->
             dateAndTimeStart.set(Calendar.HOUR_OF_DAY, hourOfDay)
@@ -160,7 +157,6 @@ class AddDealActivity : AppCompatActivity() {
             setInitialTimeEnd()
         }
 
-    // установка обработчика выбора даты
     var d =
         OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
             dateAndTimeStart.set(Calendar.YEAR, year)
@@ -168,17 +164,6 @@ class AddDealActivity : AppCompatActivity() {
             dateAndTimeStart.set(Calendar.DAY_OF_MONTH, dayOfMonth)
             setInitialDate()
         }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
