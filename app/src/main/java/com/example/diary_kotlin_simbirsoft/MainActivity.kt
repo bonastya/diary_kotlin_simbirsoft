@@ -14,14 +14,14 @@ import androidx.core.content.ContextCompat
 
 
 var realm: Realm? =null
-var calendarView:CalendarView?=null
+
 
 class MainActivity : AppCompatActivity() {
 
-    var deals = mutableListOf<Deal>()
-
-    var hour_heigh =120.0
-    var selectedDate = Calendar.getInstance()
+    private var deals = mutableListOf<Deal>()
+    private var calendarView:CalendarView?=null
+    private var hourHeight =120.0
+    private var selectedDate = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,15 +30,12 @@ class MainActivity : AppCompatActivity() {
         Realm.init(this)
         Realm.getDefaultInstance().also { realm = it }
 
-
-        calendarView = findViewById(R.id.calendarView);
+        calendarView = findViewById(R.id.calendarView)
         calendarView!!.setOnDateChangeListener {
-                view, year, month, dayOfMonth ->
+                _, year, month, dayOfMonth ->
             selectedDate.set(year, month, dayOfMonth)
             update()
         }
-
-
         update()
     }
 
@@ -47,17 +44,16 @@ class MainActivity : AppCompatActivity() {
         update()
     }
 
-    fun intToTime(j: Int): String? {
+    private fun intToTime(j: Int): String {
         return if (j < 10) "0$j:00" else "$j:00"
     }
 
-    fun dealInSelectedDay(d: Deal): Boolean {
+    private fun dealInSelectedDay(d: Deal): Boolean {
         val dealDate: String? = d.date
         val selectedDateStr: String? =DateUtils.formatDateTime(
             this,
             selectedDate.timeInMillis,
             DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
-
         )
         if (dealDate != null) {
             return dealDate==selectedDateStr
@@ -65,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    fun readData(){
+    private fun readData(){
         if(realm!=null){
             println("вот realm хоть есть ")
             if(realm!!.where(Deal::class.java).findAll().size !=0){
@@ -73,108 +69,97 @@ class MainActivity : AppCompatActivity() {
                 deals.clear()
                 for(i in realm!!.where(Deal::class.java).findAll().filter { d-> dealInSelectedDay(d) }){
                     deals.add(i)
-                    println("вот что прочитал "+i.name+" "+i.time_start+" "+i.time_finish)
+                    println("вот что прочитал "+i.name+" "+i.timeStart+" "+i.timeFinish)
                 }
+            }
+        }
+    }
+
+
+    private fun update(){
+
+        readData()
+        val dealsColumns: LinearLayout = findViewById(R.id.deals_columns)
+        dealsColumns.removeAllViews()
+
+        val hours= LinearLayout(this)
+        val lph= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT)
+        lph.setMargins(20, 3, 10, 0)
+        hours.layoutParams = lph
+        hours.orientation = LinearLayout.VERTICAL
+
+        for(i in 0..23){
+            val hour = TextView(this)
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.setMargins(0, 0, 0, 0)
+            hour.setBackgroundColor(Color.CYAN)
+            hour.layoutParams = lp
+
+            hour.text = " "+intToTime(i)
+            hour.setTextColor(Color.BLACK)
+            hour.layoutParams.height = hourHeight.toInt()
+            hour.layoutParams.width = 120
+            hours.addView(hour)
+        }
+        dealsColumns.addView(hours)
+
+        //for width of deals
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+        if(deals.size!=0){
+            val dealWidth = (displayMetrics.widthPixels-250)/deals.size
+
+            for(i in deals){
+
+                val dealColumn= LinearLayout(this)
+                val lpd= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                lpd.setMargins(0, 3, 5, 0)
+                dealColumn.layoutParams = lpd
+                dealColumn.orientation = LinearLayout.VERTICAL
+
+                val block = Space(this)
+                block.setBackgroundColor(Color.MAGENTA)
+                block.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                block.layoutParams.height = (hourHeight / 60 * i.timeStart).toInt()
+                block.layoutParams.width = dealWidth
+
+                dealColumn.addView(block)
+
+                val deal = TextView(this)
+                val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                lp.setMargins(0, 0, 0, 0)
+                deal.setBackgroundColor(ContextCompat.getColor(this, R.color.teal_lite))
+                deal.layoutParams = lp
+                deal.setPadding(15,0,0,0)
+                if(i.description!="")
+                    deal.text = i.name+"\n--------\n("+i.description+")"
+                else
+                    deal.text = i.name
+                deal.setTextColor(Color.BLACK)
+                deal.layoutParams.height = (hourHeight /60 *(i.timeFinish - i.timeStart)).toInt()
+                deal.layoutParams.width = dealWidth
+                dealColumn.addView(deal)
+
+                val block2 = Space(this)
+                block2.setBackgroundColor(Color.MAGENTA)
+                block2.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT)
+                block2.layoutParams.height = (hourHeight /60 *(24 * 60 - i.timeFinish)).toInt()
+                block2.layoutParams.width = dealWidth
+
+                dealColumn.addView(block2)
+                dealsColumns.addView(dealColumn)
 
             }
         }
 
     }
-
-
-fun update(){
-
-    readData()
-
-    val dealsColumns: LinearLayout = findViewById(R.id.deals_columns) as LinearLayout
-    dealsColumns.removeAllViews()
-
-
-    var hours:LinearLayout= LinearLayout(this)
-    val lph= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT)
-    lph.setMargins(20, 3, 10, 0)
-    hours.setLayoutParams(lph)
-    hours.orientation = LinearLayout.VERTICAL
-
-    for(i in 0..23){
-        val hour = TextView(this)
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
-        lp.setMargins(0, 0, 0, 0)
-        hour.setBackgroundColor(Color.CYAN)
-        hour.setLayoutParams(lp)
-
-        hour.setText(" "+intToTime(i));
-        hour.setTextColor(Color.BLACK)
-        hour.getLayoutParams().height = hour_heigh.toInt()
-        hour.getLayoutParams().width = 120
-        hours.addView(hour)
-    }
-    dealsColumns.addView(hours)
-
-
-    //for width of deals
-    val displayMetrics = DisplayMetrics()
-    windowManager.defaultDisplay.getMetrics(displayMetrics)
-
-    if(deals.size!=0){
-        var dealWidth = (displayMetrics.widthPixels-250)/deals.size
-
-        for(i in deals){
-
-
-            var dealColumn:LinearLayout= LinearLayout(this)
-            val lpd= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            lpd.setMargins(0, 3, 5, 0)
-            dealColumn.setLayoutParams(lpd)
-            dealColumn.orientation = LinearLayout.VERTICAL
-
-
-            var block:Space = Space(this)
-            block.setBackgroundColor(Color.MAGENTA)
-            block.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            block.getLayoutParams().height = (hour_heigh / 60 * i.time_start).toInt()
-            block.getLayoutParams().width = dealWidth
-
-            dealColumn.addView(block)
-
-
-            val deal = TextView(this)
-            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            lp.setMargins(0, 0, 0, 0)
-            deal.setBackgroundColor(ContextCompat.getColor(this, R.color.teal_lite))
-            deal.setLayoutParams(lp)
-            deal.setPadding(15,0,0,0)
-            if(i.description!=="")
-                deal.setText(i.name+"\n--------\n("+i.description+")")
-            else
-                deal.setText(i.name)
-            deal.setTextColor(Color.BLACK)
-            deal.getLayoutParams().height = (hour_heigh /60 *(i.time_finish - i.time_start)).toInt()
-            deal.getLayoutParams().width = dealWidth
-            dealColumn.addView(deal);
-
-
-            var block2:Space = Space(this)
-            block2.setBackgroundColor(Color.MAGENTA)
-            block2.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            block2.getLayoutParams().height = (hour_heigh /60 *(24 * 60 - i.time_finish)).toInt()
-            block2.getLayoutParams().width = dealWidth
-
-            dealColumn.addView(block2)
-
-            dealsColumns.addView(dealColumn)
-
-        }
-    }
-
-
-}
 
     fun goToAddDeal(view: android.view.View) {
 

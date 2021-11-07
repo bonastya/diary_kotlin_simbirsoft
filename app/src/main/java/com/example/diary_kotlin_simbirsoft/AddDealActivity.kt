@@ -14,30 +14,30 @@ import android.widget.TextView
 
 class AddDealActivity : AppCompatActivity() {
 
-    var editTextName: EditText? = null
-    var editTextDescription: EditText? = null
-    var editTextDate: TextView? = null
-    var editTextTime: TextView? = null
-    var editTextTime2: TextView? = null
-    var textViewError1: TextView? = null
-    var textViewError2: TextView? = null
-    var dateAndTimeStart: Calendar = Calendar.getInstance()
-    var dateAndTimeFinish: Calendar = Calendar.getInstance()
-    var deal:Deal=Deal()
+    private var editTextName: EditText? = null
+    private var editTextDescription: EditText? = null
+    private var editTextDate: TextView? = null
+    private var editTextTime: TextView? = null
+    private var editTextTime2: TextView? = null
+    private var textViewError1: TextView? = null
+    private var textViewError2: TextView? = null
+    private var dateAndTimeStart: Calendar = Calendar.getInstance()
+    private var dateAndTimeFinish: Calendar = Calendar.getInstance()
+    private var deal:Deal=Deal()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_deal)
-        editTextName = findViewById(R.id.editTextName);
-        editTextDescription = findViewById(R.id.editTextDescription);
-        editTextDate = findViewById(R.id.editTextDate);
-        editTextTime = findViewById(R.id.editTextTime);
+        editTextName = findViewById(R.id.editTextName)
+        editTextDescription = findViewById(R.id.editTextDescription)
+        editTextDate = findViewById(R.id.editTextDate)
+        editTextTime = findViewById(R.id.editTextTime)
         editTextTime2 = findViewById(R.id.editTextTime2)
         textViewError1 = findViewById(R.id.textViewError1)
         textViewError2 = findViewById(R.id.textViewError2)
-        setInitialDate();
-        setInitialTimeStart();
-        setInitialTimeEnd();
+        setInitialDate()
+        setInitialTimeStart()
+        setInitialTimeEnd()
 
     }
 
@@ -47,24 +47,24 @@ class AddDealActivity : AppCompatActivity() {
 
         deal.date= DateUtils.formatDateTime(
             this,
-            dateAndTimeStart.getTimeInMillis(),
+            dateAndTimeStart.timeInMillis,
             DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
 
         )
-        deal.time_start= dateAndTimeStart.get(Calendar.MILLISECONDS_IN_DAY)/1000/60
-        deal.time_finish= dateAndTimeFinish.get(Calendar.MILLISECONDS_IN_DAY)/1000/60
+        deal.timeStart= dateAndTimeStart.get(Calendar.MILLISECONDS_IN_DAY)/1000/60
+        deal.timeFinish= dateAndTimeFinish.get(Calendar.MILLISECONDS_IN_DAY)/1000/60
 
         deal.id = java.util.UUID.randomUUID().toString()
         println("вот это хочу записать "+deal.name+deal.date+" "+deal.id)
-        if(deal.time_start>=deal.time_finish || deal.name==""){
-            if(deal.time_start>=deal.time_finish)
-                textViewError2?.setVisibility(View.VISIBLE)
+        if(deal.timeStart>=deal.timeFinish || deal.name==""){
+            if(deal.timeStart>=deal.timeFinish)
+                textViewError2?.visibility = View.VISIBLE
             else
-                textViewError2?.setVisibility(View.INVISIBLE)
+                textViewError2?.visibility = View.INVISIBLE
             if(deal.name=="")
-                textViewError1?.setVisibility(View.VISIBLE)
+                textViewError1?.visibility = View.VISIBLE
             else
-                textViewError1?.setVisibility(View.INVISIBLE)
+                textViewError1?.visibility = View.INVISIBLE
         }
         else{
             try {
@@ -112,53 +112,47 @@ class AddDealActivity : AppCompatActivity() {
 
     // Set initial date and time(current)
     private fun setInitialDate() {
-        editTextDate?.setText(
-            DateUtils.formatDateTime(
-                this,
-                dateAndTimeStart.getTimeInMillis(),
-                DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
+        editTextDate?.text = DateUtils.formatDateTime(
+            this,
+            dateAndTimeStart.timeInMillis,
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
 
-            )
         )
     }
 
     private fun setInitialTimeStart() {
-        editTextTime?.setText(
-            DateUtils.formatDateTime(
-                this,
-                dateAndTimeStart.getTimeInMillis(),
-                DateUtils.FORMAT_SHOW_TIME
-            )
+        editTextTime?.text = DateUtils.formatDateTime(
+            this,
+            dateAndTimeStart.timeInMillis,
+            DateUtils.FORMAT_SHOW_TIME
         )
     }
 
     private fun setInitialTimeEnd() {
-        editTextTime2?.setText(
-            DateUtils.formatDateTime(
-                this,
-                dateAndTimeFinish.getTimeInMillis(),
-                 DateUtils.FORMAT_SHOW_TIME
-            )
+        editTextTime2?.text = DateUtils.formatDateTime(
+            this,
+            dateAndTimeFinish.timeInMillis,
+            DateUtils.FORMAT_SHOW_TIME
         )
     }
 
     // Listeners
-    var t1 =
-        OnTimeSetListener { view, hourOfDay, minute ->
+    private var t1 =
+        OnTimeSetListener { _, hourOfDay, minute ->
             dateAndTimeStart.set(Calendar.HOUR_OF_DAY, hourOfDay)
             dateAndTimeStart.set(Calendar.MINUTE, minute)
             setInitialTimeStart()
         }
 
-    var t2 =
-        OnTimeSetListener { view, hourOfDay, minute ->
+    private var t2 =
+        OnTimeSetListener { _, hourOfDay, minute ->
             dateAndTimeFinish.set(Calendar.HOUR_OF_DAY, hourOfDay)
             dateAndTimeFinish.set(Calendar.MINUTE, minute)
             setInitialTimeEnd()
         }
 
-    var d =
-        OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+    private var d =
+        OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
             dateAndTimeStart.set(Calendar.YEAR, year)
             dateAndTimeStart.set(Calendar.MONTH, monthOfYear)
             dateAndTimeStart.set(Calendar.DAY_OF_MONTH, dayOfMonth)

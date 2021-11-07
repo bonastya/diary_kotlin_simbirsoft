@@ -13,8 +13,8 @@ open class Deal : RealmObject() {
 
     var name: String? = null
     var color: String? = null
-    var time_start: Int = 0
-    var time_finish: Int = 0
+    var timeStart: Int = 0
+    var timeFinish: Int = 0
     var date: String? = null
     var description: String? = null
 
