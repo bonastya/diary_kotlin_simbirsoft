@@ -9,39 +9,98 @@ import android.provider.CalendarContract
 import android.util.DisplayMetrics
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
+import io.realm.Realm
+import android.R.bool
+import android.annotation.SuppressLint
+import android.icu.util.Calendar
+import android.text.format.DateUtils
+import androidx.core.view.children
+import java.time.Instant
+import java.time.Instant.now
+import java.time.LocalDateTime
+import java.util.*
+
+
+var realm: Realm? =null
+var calendarView:CalendarView?=null
 
 class MainActivity : AppCompatActivity() {
 
-    var hour_heigh =100
+    var deals = mutableListOf<Deal>()
+    //private
 
+    var hour_heigh =100.0
+    var selectedDate = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        println("aaa lf")
+        Realm.init(this)
+        Realm.getDefaultInstance().also { realm = it }
+
+
+        calendarView = findViewById(R.id.calendarView);
+        calendarView!!.setOnDateChangeListener {
+                view, year, month, dayOfMonth ->
+            selectedDate.set(year, month, dayOfMonth)
+            update()
+        }
+
+
+        update()
+    }
+
+    override fun onResume() {
+        super.onResume()
         update()
     }
 
     fun intToTime(j: Int): String? {
         return if (j < 10) "0$j:00" else "$j:00"
     }
+
+    fun dealInSelectedDay(d: Deal): Boolean {
+        val dealDate: String? = d.date
+        val selectedDateStr: String? =DateUtils.formatDateTime(
+            this,
+            selectedDate.timeInMillis,
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR
+
+        )
+        if (dealDate != null) {
+            return dealDate==selectedDateStr
+        }
+        return false
+    }
+
+    fun readData(){
+        if(realm!=null){
+            println("вот realm хоть есть ")
+            if(realm!!.where(Deal::class.java).findAll().size !=0){
+                println("вот сколько записей "+realm!!.where(Deal::class.java).findAll().size)
+                deals.clear()
+                for(i in realm!!.where(Deal::class.java).findAll().filter { d-> dealInSelectedDay(d) }){
+                    deals.add(i)
+                    println("вот что прочитал "+i.name+" "+i.time_start+" "+i.time_finish)
+                }
+
+            }
+        }
+
+    }
+
+
+
+
 fun update(){
+    println("aaa lf")
 
-    var deal1 = Deal()
-    deal1.name="name1"
-    deal1.date=111
-    deal1.time_start=111
-    deal1.time_finish=222
-
-    var deal2 = Deal()
-    deal2.name="name2"
-    deal2.date=111
-    deal2.time_start=211
-    deal2.time_finish=322
-    var deals = listOf<Deal>(deal1,deal2,deal2)
-
-
+    readData()
 
     val dealsColumns: LinearLayout = findViewById(R.id.deals_columns) as LinearLayout
+    dealsColumns.removeAllViews()
+
 
     var hours:LinearLayout= LinearLayout(this)
     val lph= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -50,7 +109,7 @@ fun update(){
     hours.setLayoutParams(lph)
     hours.orientation = LinearLayout.VERTICAL
 
-for(i in 0..24){
+for(i in 0..23){
     //children of parent linearlayout
     val hour = TextView(this)
     val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -63,7 +122,7 @@ for(i in 0..24){
 
     hour.setText(" "+intToTime(i));
     hour.setTextColor(Color.BLACK)
-    hour.getLayoutParams().height = hour_heigh
+    hour.getLayoutParams().height = hour_heigh.toInt()
     hour.getLayoutParams().width = 120
     hours.addView(hour); // lo agregamos al layout
 }
@@ -74,130 +133,68 @@ for(i in 0..24){
     val displayMetrics = DisplayMetrics()
     windowManager.defaultDisplay.getMetrics(displayMetrics)
 
-    var dealWidth = (displayMetrics.widthPixels-250)/deals.size
+    if(deals.size!=0){
+        var dealWidth = (displayMetrics.widthPixels-250)/deals.size
 
-    for(i in deals){
-
-
-
-        println("делаю дело")
-        var dealColumn:LinearLayout= LinearLayout(this)
-        val lpd= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
-        lpd.setMargins(0, 3, 5, 0)
-        dealColumn.setLayoutParams(lpd)
-        dealColumn.orientation = LinearLayout.VERTICAL
+        for(i in deals){
 
 
-        var block:Space = Space(this)
-        block.setBackgroundColor(Color.MAGENTA)
-        block.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
-        block.getLayoutParams().height = hour_heigh / 60 * i.time_start
-        block.getLayoutParams().width = dealWidth
+            var dealColumn:LinearLayout= LinearLayout(this)
+            val lpd= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            lpd.setMargins(0, 3, 5, 0)
+            dealColumn.setLayoutParams(lpd)
+            dealColumn.orientation = LinearLayout.VERTICAL
 
-        dealColumn.addView(block)
 
+            var block:Space = Space(this)
+            block.setBackgroundColor(Color.MAGENTA)
+            block.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            block.getLayoutParams().height = (hour_heigh / 60 * i.time_start).toInt()
+            block.getLayoutParams().width = dealWidth
+
+            dealColumn.addView(block)
 
 
 
 
 
 
-        val deal = TextView(this)
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
-        lp.setMargins(0, 0, 0, 0)
 
-        deal.setBackgroundColor(Color.CYAN)
+            val deal = TextView(this)
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.setMargins(0, 0, 0, 0)
 
-        deal.setLayoutParams(lp)
+            deal.setBackgroundColor(Color.CYAN)
 
-        deal.setText(i.name);
-        deal.setTextColor(Color.BLACK)
-        deal.getLayoutParams().height = hour_heigh /60 *(i.time_finish - i.time_start)
-        deal.getLayoutParams().width = dealWidth
-        dealColumn.addView(deal);
+            deal.setLayoutParams(lp)
 
-
-
+            deal.setText(i.name);
+            deal.setTextColor(Color.BLACK)
+            deal.getLayoutParams().height = (hour_heigh /60 *(i.time_finish - i.time_start)).toInt()
+            deal.getLayoutParams().width = dealWidth
+            dealColumn.addView(deal);
 
 
-        var block2:Space = Space(this)
-        block2.setBackgroundColor(Color.MAGENTA)
-        block2.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
-        block2.getLayoutParams().height = hour_heigh /60 *(24 * 60 - i.time_finish)
-        block2.getLayoutParams().width = dealWidth
-
-        dealColumn.addView(block2)
 
 
-        dealsColumns.addView(dealColumn)
 
+            var block2:Space = Space(this)
+            block2.setBackgroundColor(Color.MAGENTA)
+            block2.layoutParams= LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+            block2.getLayoutParams().height = (hour_heigh /60 *(24 * 60 - i.time_finish)).toInt()
+            block2.getLayoutParams().width = dealWidth
+
+            dealColumn.addView(block2)
+
+
+            dealsColumns.addView(dealColumn)
+
+        }
     }
-
-
-
-/*
-
-    Column(children: [
-            for (int j = 0; j < 24; j++)
-    Container(
-        color: Color(0xff3AF0E5),
-        height: hour_heigh * 1,
-    width: 40,
-    margin: EdgeInsets.only(right: 2),
-    child: Text(intToTime(j)),
-    )
-    ]),
-    if (deals.length == 0)
-        Expanded(
-            child: Column(
-                    children: [
-                Container(
-                    color: Colors.white,
-                width: 2000,
-    height: hour_heigh * 24,
-    )
-    ],
-    )),
-    for (Deal d in deals)
-    Expanded(
-        child: Column(
-                children: [
-            Container(
-                color: Colors.white,
-            height: hour_heigh / 60 * d.time_start,
-    width: 2000,
-    ),
-    Container(
-        alignment: Alignment.topCenter,
-    color: Color(0xffd1fff6),
-    height: hour_heigh /
-    60 *
-            (d.time_finish - d.time_start),
-    width: 2000,
-    child: Text(
-    d.name + "\n" + "(" + d.description + ")",
-    textAlign: TextAlign.center,
-    ),
-    ),
-    Container(
-        color: Colors.white,
-    height: hour_heigh /
-    60 *
-            (24 * 60 - d.time_finish),
-    width: 2000,
-    )
-    ],
-    ),
-    ),
-
-
-*/
-
-
 
 
 
@@ -212,6 +209,10 @@ for(i in 0..24){
             putExtra(EXTRA_MESSAGE, message)
         }
         startActivity(intent)
+    }
+
+    fun upd(view: android.view.View) {
+        update()
     }
 
 
